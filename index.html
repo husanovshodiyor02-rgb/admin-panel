@@ -1,32 +1,59 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html lang="uz">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Admin Dashboard - Mashinalar</title>
-<link rel="stylesheet" href="./style.css">
-
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Premium Mashinalar — Gallery & Admin</title>
+  <link rel="stylesheet" href="./style.css" />
 </head>
 <body>
+  <header class="site-header">
+    <h1>🚘 Premium Mashinalar</h1>
+    <p class="subtitle">MockAPI orqali yuklangan rasmlar va ma'lumotlar</p>
+  </header>
 
-<h1>Admin Dashboard - Mashinalar</h1>
+  
+  <section class="admin-panel">
+    <h2>🧰 Admin Panel</h2>
+    <form id="addForm" class="admin-form">
+      <input type="text" id="model" placeholder="Model" required />
+      <input type="text" id="rang" placeholder="Rang" required />
+      <input type="number" id="yil" placeholder="Yil" required />
+      <input type="text" id="narx" placeholder="Narx ($)" required />
+      <input type="url" id="rasm" placeholder="Rasm URL" required />
+      <button type="submit" class="add-btn">+ Qo‘shish</button>
+    </form>
+  </section>
 
-<div class="dashboard">
-  <div class="form-group">
-    <input type="text" id="carName" placeholder="Nom">
-    <input type="text" id="carModel" placeholder="Model">
-    <input type="number" id="carPrice" placeholder="Narx">
-    <input type="number" id="carYear" placeholder="Yil">
-    <input type="text" id="carImg" placeholder="Rasm URL">
-    <button id="addCarBtn"><i class="fas fa-plus"></i> Qo'shish</button>
+  <main>
+    <section class="controls">
+      <input id="search" type="search" placeholder="Model bo'yicha qidirish..." />
+    </section>
+
+    <div id="loader" class="loader"></div>
+    <div id="error" class="error" hidden></div>
+
+    <section id="gallery" class="gallery"></section>
+  </main>
+
+  
+  <div id="modal" class="modal" aria-hidden="true" role="dialog">
+    <button id="modalClose" class="modal-close" aria-label="Yopish">&times;</button>
+    <div class="modal-content">
+      <img id="modalImg" alt="Katta rasm" />
+      <div class="modal-info">
+        <h2 id="modalModel"></h2>
+        <p id="modalSpecs"></p>
+      </div>
+    </div>
   </div>
 
-  <div class="card-container" id="carList">
-    
-  </div>
-</div>
+  <footer class="site-footer">
+    <small>Data manbasi: 
+      <code>https://68fb44ef94ec9606602561ae.mockapi.io/api/api</code>
+    </small>
+  </footer>
 
-<script src="main.js"></script>
+  <script src="./main.js"></script>
 </body>
 </html>

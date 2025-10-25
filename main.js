@@ -1,96 +1,161 @@
+const API_URL = "https://68fb44ef94ec9606602561ae.mockapi.io/api/api";
+
+const loader = document.getElementById("loader");
+const gallery = document.getElementById("gallery");
+const errorBox = document.getElementById("error");
+const search = document.getElementById("search");
+const form = document.getElementById("addForm");
 
 
-const carList = document.getElementById("carList");
-const addCarBtn = document.getElementById("addCarBtn");
+const modal = document.getElementById("modal");
+const modalImg = document.getElementById("modalImg");
+const modalModel = document.getElementById("modalModel");
+const modalSpecs = document.getElementById("modalSpecs");
+const modalClose = document.getElementById("modalClose");
 
+async function loadData() {
+  loader.style.display = "block";
+  errorBox.hidden = true;
+  try {
+    const res = await fetch(API);
+    if (!res.ok) throw new Error(`Server javobi: ${res.status}`);
+    const data = await res.json();
+    if (!Array.isArray(data)) throw new Error("Qaytgan ma'lumot array emas");
 
-function loadCars() {
-  const cars = JSON.parse(localStorage.getItem("cars")) || [];
-  cars.forEach((car) => {
-    createCard(car.name, car.model, car.price, car.year, car.imgUrl);
-  });
-}
-
-
-function saveCars() {
-  const cards = carList.querySelectorAll(".card");
-  const cars = [];
-  cards.forEach((card) => {
-    const name = card.querySelector("h3").innerText;
-    const model = card.querySelector("p").dataset.model;
-    const price = card.querySelector("p").dataset.price;
-    const year = card.querySelector("p").dataset.year;
-    const imgUrl = card.querySelector("img").src;
-    cars.push({ name, model, price, year, imgUrl });
-  });
-  localStorage.setItem("cars", JSON.stringify(cars));
-}
-
-
-function createCard(name, model, price, year, imgUrl) {
-  const card = document.createElement("div");
-  card.className = "card";
-
-  card.innerHTML = `
-    <img src="${imgUrl}" alt="${name}">
-    <div class="card-body">
-      <h3>${name}</h3>
-      <p data-model="${model}" data-price="${price}" data-year="${year}">
-        <i class="fas fa-car"></i> Model: ${model}<br>
-        <i class="fas fa-dollar-sign"></i> Narx: ${price}<br>
-        <i class="fas fa-calendar-alt"></i> Yil: ${year}
-      </p>
-      <button class="edit-btn"><i class="fas fa-edit"></i> Tahrirlash</button>
-      <button class="delete-btn"><i class="fas fa-trash"></i> O'chirish</button>
-    </div>
-  `;
-
- 
-  card.querySelector(".delete-btn").addEventListener("click", () => {
-    carList.removeChild(card);
-    saveCars();
-  });
-
-
-  card.querySelector(".edit-btn").addEventListener("click", () => {
-    document.getElementById("carName").value = name;
-    document.getElementById("carModel").value = model;
-    document.getElementById("carPrice").value = price;
-    document.getElementById("carYear").value = year;
-    document.getElementById("carImg").value = imgUrl;
-    carList.removeChild(card);
-    saveCars();
-  });
-
-  carList.appendChild(card);
-  saveCars();
-}
-
-
-addCarBtn.addEventListener("click", () => {
-  const name = document.getElementById("carName").value.trim();
-  const model = document.getElementById("carModel").value.trim();
-  const price = document.getElementById("carPrice").value.trim();
-  const year = document.getElementById("carYear").value.trim();
-  const imgUrl = document.getElementById("carImg").value.trim();
-
-  if (!name || !model || !price || !year || !imgUrl) {
-    alert("Iltimos, barcha maydonlarni to‘ldiring");
-    return;
+    
+    const items = data.slice(0, 20);
+    render(items);
+    attachSearch(items);
+  } catch (err) {
+    console.error(err);
+    errorBox.hidden = false;
+    errorBox.textContent = "Ma'lumot yuklanmadi: " + err.message;
+  } finally {
+    loader.style.display = "none";
   }
+}
 
-  createCard(name, model, price, year, imgUrl);
-  clearInputs();
+
+
+async function getCars() {
+  try {
+    const res = await fetch(API_URL);
+    const data = await res.json();
+    renderGallery(data);
+  } catch (err) {
+    errorBox.textContent = "Xatolik: " + err.message;
+    errorBox.hidden = false;
+  } finally {
+    loader.style.display = "none";
+  }
+}
+
+
+function renderGallery(cars) {
+  gallery.innerHTML = "";
+  cars.forEach((car) => {
+    const card = document.createElement("div");
+    card.className = "card";
+    card.innerHTML = `
+      <img src="${car.Rasm || car.rasm}" alt="${
+      car.Model
+    }" onerror="this.src='https://via.placeholder.com/300x180?text=No+Image'">
+      <div class="card-content">
+        <h3>${car.Model}</h3>
+        <p>Rang: ${car.Rang}</p>
+        <p>Yil: ${car.Yil}</p>
+        <p>Narx: ${car.Narx}</p>
+        <div class="actions">
+          <button class="edit" onclick="editCar(${car.id})">Edit</button>
+          <button class="delete" onclick="deleteCar(${car.id})">Delete</button>
+        </div>
+      </div>
+    `;
+  
+    card.querySelector("img").addEventListener("click", () => openModal(car));
+    gallery.appendChild(card);
+  });
+}
+
+
+function openModal(car) {
+  modal.setAttribute("aria-hidden", "false");
+  modalImg.src = car.Rasm;
+  modalModel.textContent = car.Model;
+  modalSpecs.textContent = `${car.Rang}, ${car.Yil}, ${car.Narx}`;
+}
+modalClose.addEventListener("click", () => {
+  modal.setAttribute("aria-hidden", "true");
+});
+
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const newCar = {
+    Model: form.model.value,
+    Rang: form.rang.value,
+    Yil: form.yil.value,
+    Narx: form.narx.value,
+    Rasm: form.rasm.value,
+  };
+  const res = await fetch(API_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(newCar),
+  });
+  const car = await res.json();
+  renderGallery(await (await fetch(API_URL)).json());
+  form.reset();
 });
 
 
-function clearInputs() {
-  document.getElementById("carName").value = "";
-  document.getElementById("carModel").value = "";
-  document.getElementById("carPrice").value = "";
-  document.getElementById("carYear").value = "";
-  document.getElementById("carImg").value = "";
+async function deleteCar(id) {
+  if (confirm("Haqiqatan ham o‘chirmoqchimisiz?")) {
+    await fetch(`${API_URL}/${id}`, { method: "DELETE" });
+    getCars();
+  }
 }
 
 
-window.addEventListener("load", loadCars);
+async function editCar(id) {
+  const res = await fetch(`${API_URL}/${id}`);
+  const car = await res.json();
+
+  form.model.value = car.Model;
+  form.rang.value = car.Rang;
+  form.yil.value = car.Yil;
+  form.narx.value = car.Narx;
+  form.rasm.value = car.Rasm;
+
+  document.querySelector(".add-btn").textContent = "💾 Saqlash";
+
+  form.onsubmit = async (e) => {
+    e.preventDefault();
+    const updated = {
+      Model: form.model.value,
+      Rang: form.rang.value,
+      Yil: form.yil.value,
+      Narx: form.narx.value,
+      Rasm: form.rasm.value,
+    };
+    await fetch(`${API_URL}/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(updated),
+    });
+    document.querySelector(".add-btn").textContent = "+ Qo‘shish";
+    form.reset();
+    getCars();
+  };
+}
+
+
+search.addEventListener("input", async (e) => {
+  const res = await fetch(API_URL);
+  const cars = await res.json();
+  const filtered = cars.filter((car) =>
+    car.Model.toLowerCase().includes(e.target.value.toLowerCase())
+  );
+  renderGallery(filtered);
+});
+
+getCars();
